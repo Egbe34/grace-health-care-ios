@@ -20,7 +20,18 @@ class AuthGate extends StatelessWidget {
           );
         }
 
-        // ✅ Not logged in
+        if (authSnap.hasError) {
+          return Scaffold(
+            body: Center(
+              child: Text(
+                'Auth error:\n${authSnap.error}',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+
+        // Not logged in
         if (!authSnap.hasData) {
           return const AuthChoiceScreen();
         }
@@ -28,7 +39,10 @@ class AuthGate extends StatelessWidget {
         final uid = authSnap.data!.uid;
 
         return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-          stream: FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
+          stream: FirebaseFirestore.instance
+              .collection('users')
+              .doc(uid)
+              .snapshots(),
           builder: (context, userSnap) {
             if (userSnap.connectionState == ConnectionState.waiting) {
               return const Scaffold(
@@ -40,23 +54,32 @@ class AuthGate extends StatelessWidget {
               return Scaffold(
                 body: Center(
                   child: Text(
-                    "Failed to load profile.\n${userSnap.error}",
+                    'Failed to load profile.\n${userSnap.error}',
                     textAlign: TextAlign.center,
                   ),
                 ),
               );
             }
 
-            final data = userSnap.data?.data();
-            final town = (data?['town'] ?? '').toString().trim();
-
-            // ✅ If doc missing OR town missing → go to town selection
-            if (!userSnap.hasData || !userSnap.data!.exists || town.isEmpty) {
-              return TownSelectionScreen();
+            if (!userSnap.hasData || !userSnap.data!.exists) {
+              return const TownSelectionScreen();
             }
 
-            // ✅ Town exists → go to Home
-            return GHCMainNav();
+            final data = userSnap.data!.data();
+
+            if (data == null) {
+              return const TownSelectionScreen();
+            }
+
+            final town = (data['town'] ?? '').toString().trim();
+
+            // If town missing -> go to town selection
+            if (town.isEmpty) {
+              return const TownSelectionScreen();
+            }
+
+            // Town exists -> go to Home
+            return const GHCMainNav();
           },
         );
       },
