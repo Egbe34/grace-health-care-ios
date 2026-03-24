@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "927543618606",
+    "project_id": "ghc-healthcare-main",
+    "storage_bucket": "ghc-healthcare-main.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:927543618606:android:459ad25a07388af9c0c3bf",
+        "android_client_info": {
+          "package_name": "com.gracehealthcare.ghc_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCVYLgxtISPLr7wBea1IuoM19oPShRR9-s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

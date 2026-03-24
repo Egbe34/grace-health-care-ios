@@ -1,0 +1,25 @@
+{
+  "@@locale": "fr",
+  "appTitle": "Grace Health Care",
+  "trustedTagline": "Des soins de sante fiables ä votre porte",
+  "chooseLanguage": "Choisir la langue",
+  "english": "Anglais",
+  "french": "Francais",
+  "continueText": "Continuer",
+  "myBookings": "Mes reservations",
+  "services": "Services",
+
+  "profile": "Profil",
+  "account": "Compte",
+  "privacySecurity": "Confidentialité & Sécurité",
+  "subscriptionPlans": "Abonnements",
+  "support": "Support",
+  "aboutGHC": "À propos de Grace Health Care",
+  "contact": "Contact",
+  "reviews": "Avis",
+  "logout": "Se déconnecter",
+  "noEmail": "Aucun e-mail",
+  "ghcPatient": "Patient GHC",
+  "activePlan": "Forfait actif",
+  "planInactive": "Forfait inactif"
+}
