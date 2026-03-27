@@ -32,6 +32,35 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
     );
   }
 
+  String? _normalizePhoneNumber(String input) {
+    String value = input.trim();
+
+    // Remove spaces, dashes, brackets
+    value = value.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+
+    // Already international format
+    if (value.startsWith('+') && value.length >= 10) {
+      return value;
+    }
+
+    // Cameroon local format: 6XXXXXXXX
+    if (value.length == 9 && value.startsWith('6')) {
+      return '+237$value';
+    }
+
+    // Cameroon format with leading zero: 06XXXXXXXX
+    if (value.length == 10 && value.startsWith('0')) {
+      return '+237${value.substring(1)}';
+    }
+
+    // Cameroon typed as 237XXXXXXXXX without +
+    if (value.startsWith('237') && value.length == 12) {
+      return '+$value';
+    }
+
+    return null;
+  }
+
   Future<void> _sendOtp() async {
     final raw = _phoneCtrl.text.trim();
 
@@ -40,8 +69,10 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
       return;
     }
 
-    if (!raw.startsWith('+')) {
-      _show("Use full format like +2376XXXXXXX");
+    final phoneNumber = _normalizePhoneNumber(raw);
+
+    if (phoneNumber == null) {
+      _show("Enter a valid phone number. Example: +237674975175");
       return;
     }
 
@@ -49,12 +80,22 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
 
     try {
       await FirebaseAuth.instance.verifyPhoneNumber(
-        phoneNumber: raw,
+        phoneNumber: phoneNumber,
         timeout: const Duration(seconds: 60),
 
         verificationCompleted: (PhoneAuthCredential credential) async {
-          await FirebaseAuth.instance.signInWithCredential(credential);
-          await _goToCompleteProfile();
+          try {
+            await FirebaseAuth.instance.signInWithCredential(credential);
+            await _goToCompleteProfile(phoneNumber);
+          } on FirebaseAuthException catch (e) {
+            if (!mounted) return;
+            setState(() => _loading = false);
+            _show(e.message ?? "Auto verification failed");
+          } catch (e) {
+            if (!mounted) return;
+            setState(() => _loading = false);
+            _show("Auto verification failed");
+          }
         },
 
         verificationFailed: (FirebaseAuthException e) {
@@ -62,10 +103,17 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
           setState(() => _loading = false);
 
           String msg = e.message ?? "Verification failed";
+
           if (e.code == "invalid-phone-number") {
             msg = "Invalid phone number";
           } else if (e.code == "too-many-requests") {
             msg = "Too many attempts. Please try again later.";
+          } else if (e.code == "quota-exceeded") {
+            msg = "SMS quota exceeded. Try again later.";
+          } else if (e.code == "app-not-authorized") {
+            msg = "App is not authorized for phone authentication.";
+          } else if (e.code == "captcha-check-failed") {
+            msg = "Security check failed. Try again.";
           }
 
           _show(msg);
@@ -78,7 +126,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
             _codeSent = true;
             _loading = false;
           });
-          _show("OTP sent");
+          _show("OTP sent successfully");
         },
 
         codeAutoRetrievalTimeout: (String verificationId) {
@@ -88,7 +136,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
-      _show("Failed to send OTP: $e");
+      _show("Failed to send OTP");
     }
   }
 
@@ -100,8 +148,8 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
       return;
     }
 
-    if (code.isEmpty || code.length < 4) {
-      _show("Enter valid OTP");
+    if (code.length != 6) {
+      _show("Enter the 6-digit OTP code");
       return;
     }
 
@@ -114,7 +162,11 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
       );
 
       await FirebaseAuth.instance.signInWithCredential(credential);
-      await _goToCompleteProfile();
+
+      final normalizedPhone =
+          _normalizePhoneNumber(_phoneCtrl.text.trim()) ?? _phoneCtrl.text.trim();
+
+      await _goToCompleteProfile(normalizedPhone);
     } on FirebaseAuthException catch (e) {
       String msg = e.message ?? "OTP verification failed";
 
@@ -126,17 +178,19 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
 
       _show(msg);
     } catch (e) {
-      _show("OTP failed: $e");
+      _show("OTP verification failed");
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
-  Future<void> _goToCompleteProfile() async {
+  Future<void> _goToCompleteProfile(String fallbackPhone) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    final phone = user.phoneNumber ?? _phoneCtrl.text.trim();
+    final phone = user.phoneNumber ?? fallbackPhone;
 
     if (!mounted) return;
 
@@ -188,7 +242,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                   BoxShadow(
                     blurRadius: 18,
                     offset: const Offset(0, 10),
-                    color: Colors.black.withValues(alpha: 0.10),
+                    color: Colors.black.withOpacity(0.10),
                   ),
                 ],
               ),
@@ -198,7 +252,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                     width: 52,
                     height: 52,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.18),
+                      color: Colors.white.withOpacity(0.18),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: const Icon(Icons.phone_iphone, color: Colors.white),
@@ -240,7 +294,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                   BoxShadow(
                     blurRadius: 18,
                     offset: const Offset(0, 10),
-                    color: Colors.black.withValues(alpha: 0.06),
+                    color: Colors.black.withOpacity(0.06),
                   ),
                 ],
               ),
@@ -252,8 +306,8 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                     enabled: !_codeSent && !_loading,
                     decoration: InputDecoration(
                       labelText: "Phone number",
-                      hintText: "+2376XXXXXXX",
-                      helperText: "Example: +237674975175",
+                      hintText: "+237674975175",
+                      helperText: "You can also type 674975175",
                       prefixIcon: const Icon(Icons.phone_outlined),
                       filled: true,
                       fillColor: const Color(0xFFF8FAFC),
@@ -267,6 +321,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                     TextField(
                       controller: _otpCtrl,
                       keyboardType: TextInputType.number,
+                      maxLength: 6,
                       decoration: InputDecoration(
                         labelText: "OTP code",
                         hintText: "123456",
@@ -375,4 +430,3 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
     );
   }
 }
-
