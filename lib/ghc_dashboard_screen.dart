@@ -35,7 +35,7 @@ class GHCDashboardScreen extends StatelessWidget {
     final menuLogout = isFrench ? "Déconnexion" : "Logout";
     final defaultPatient = "Patient";
     final unknownEmail = isFrench ? "inconnu@email.com" : "unknown@email.com";
-    final servicesTitle = "Services";
+    final servicesTitle = isFrench ? "Services" : "Services";
 
     if (user == null) {
       return Scaffold(
@@ -207,7 +207,7 @@ class GHCDashboardScreen extends StatelessWidget {
                 children: [
                   const Icon(Icons.receipt_long),
                   const SizedBox(width: 10),
-                  Text(menuMyBookings),
+                  Expanded(child: Text(menuMyBookings)),
                 ],
               ),
             ),
@@ -217,7 +217,7 @@ class GHCDashboardScreen extends StatelessWidget {
                 children: [
                   const Icon(Icons.logout),
                   const SizedBox(width: 10),
-                  Text(menuLogout),
+                  Expanded(child: Text(menuLogout)),
                 ],
               ),
             ),
@@ -300,6 +300,7 @@ class _PremiumWelcomeHeader extends StatelessWidget {
         ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 46,
@@ -318,28 +319,35 @@ class _PremiumWelcomeHeader extends StatelessWidget {
               children: [
                 Text(
                   welcomeText,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
+                    height: 1.2,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   email,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.88),
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 10),
                 Text(
                   subtitle,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.90),
                     fontSize: 12,
+                    height: 1.3,
                   ),
                 ),
               ],
@@ -365,11 +373,12 @@ class _QuickActions extends StatelessWidget {
     final isFrench = Localizations.localeOf(context).languageCode == "fr";
 
     final bookNow = isFrench ? "Réserver" : "Book Now";
-    final newAppointment = isFrench ? "Nouveau rendez-vous" : "New appointment";
-    final myBookings = isFrench ? "Mes réservations" : "My Bookings";
-    final trackStatus = isFrench ? "Suivre le statut" : "Track status";
+    final newAppointment = isFrench ? "Prendre RDV" : "Book visit";
+    final myBookings = isFrench ? "Réservations" : "Bookings";
+    final trackStatus = isFrench ? "Suivre" : "Track";
 
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: _ActionCard(
@@ -419,6 +428,7 @@ class _ActionCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
       child: Container(
+        constraints: const BoxConstraints(minHeight: 122),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: bg,
@@ -435,6 +445,7 @@ class _ActionCard extends StatelessWidget {
           ],
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
               width: 40,
@@ -447,26 +458,39 @@ class _ActionCard extends StatelessWidget {
               ),
               child: Icon(icon, color: filled ? Colors.white : GHC.primary),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     title,
-                    style: TextStyle(color: fg, fontWeight: FontWeight.w800),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: fg,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                      height: 1.15,
+                    ),
                   ),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 4),
                   Text(
                     subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: fg.withOpacity(0.75),
+                      color: fg.withOpacity(0.78),
                       fontSize: 12,
+                      height: 1.2,
                     ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(width: 6),
             Icon(Icons.chevron_right, color: fg.withOpacity(0.8)),
           ],
         ),
